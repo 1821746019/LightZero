@@ -1448,6 +1448,11 @@ class WorldModel(nn.Module):
         logits_observations = rearrange(outputs.logits_observations[:, :-1], 'b t o -> (b t) o')
         labels_observations = labels_observations.reshape(-1, self.projection_input_dim)
 
+        print(f"logits_observations has nan: {torch.isnan(logits_observations).any()}")
+        assert not torch.isnan(logits_observations).any(), "logits_observations contains NaN values"
+        print(f"labels_observations has nan: {torch.isnan(labels_observations).any()}")
+        assert not torch.isnan(labels_observations).any(), "labels_observations contains NaN values"
+
         # Compute prediction loss for observations. Options: MSE and Group KL
         if self.predict_latent_loss_type == 'mse':
             # MSE loss, directly compare logits and labels
@@ -1457,21 +1462,25 @@ class WorldModel(nn.Module):
             # Group KL loss, group features and calculate KL divergence within each group
             batch_size, num_features = logits_observations.shape
             epsilon = 1e-6
-            logits_reshaped = logits_observations.reshape(batch_size, self.num_groups, self.group_size) + epsilon
-            labels_reshaped = labels_observations.reshape(batch_size, self.num_groups, self.group_size) + epsilon
+            logits_reshaped = logits_observations.reshape(batch_size, self.num_groups, self.group_size)
+            labels_reshaped = labels_observations.reshape(batch_size, self.num_groups, self.group_size)
 
-            loss_obs = F.kl_div(logits_reshaped.log(), labels_reshaped, reduction='none').sum(dim=-1).mean(dim=-1)
+            # Ensure non-negativity and avoid log(0) for KL-divergence
+            logits_final = F.relu(logits_reshaped) + epsilon
+            labels_final = F.relu(labels_reshaped) + epsilon
+
+            loss_obs = F.kl_div(logits_final.log(), labels_final, reduction='none').sum(dim=-1).mean(dim=-1)
 
             #  ========== for debugging ==========
             # print('loss_obs:', loss_obs.mean())
             # assert not torch.isnan(loss_obs).any(), "loss_obs contains NaN values"
-            # assert not torch.isinf(loss_obs).any(), "loss_obs contains Inf values"
-            # for name, param in self.tokenizer.encoder.named_parameters():
-            #     print('name, param.mean(), param.std():', name, param.mean(), param.std())
 
         # Apply mask to loss_obs
         mask_padding_expanded = batch['mask_padding'][:, 1:].contiguous().view(-1)
         loss_obs = (loss_obs * mask_padding_expanded)
+        
+        # print(f"loss_obs mean: {loss_obs.mean()}")
+        # assert not torch.isnan(loss_obs).any(), "loss_obs contains NaN values"
 
         # Compute labels for policy and value
         labels_policy, labels_value = self.compute_labels_world_model_value_policy(batch['target_value'],
@@ -1481,10 +1490,16 @@ class WorldModel(nn.Module):
         # Compute losses for rewards, policy, and value
         loss_rewards = self.compute_cross_entropy_loss(outputs, labels_rewards, batch, element='rewards')
 
+        # print(f"loss_rewards mean: {loss_rewards.mean()}")
+        # assert not torch.isnan(loss_rewards).any(), "loss_rewards contains NaN values"
+
         if not self.continuous_action_space:
             loss_policy, orig_policy_loss, policy_entropy = self.compute_cross_entropy_loss(outputs, labels_policy,
                                                                                             batch,
                                                                                             element='policy')
+            
+            # print(f"loss_policy mean: {loss_policy.mean()}")
+            # assert not torch.isnan(loss_policy).any(), "loss_policy contains NaN values"
         else:
             # NOTE: for continuous action space
             if self.config.policy_loss_type == 'simple':
@@ -1496,6 +1511,9 @@ class WorldModel(nn.Module):
             policy_entropy = - policy_entropy_loss
 
         loss_value = self.compute_cross_entropy_loss(outputs, labels_value, batch, element='value')
+        
+        # print(f"loss_value mean: {loss_value.mean()}")
+        # assert not torch.isnan(loss_value).any(), "loss_value contains NaN values"
 
         # ==== TODO: calculate the new priorities for each transition. ====
         # value_priority = L1Loss(reduction='none')(labels_value.squeeze(-1), outputs['logits_value'][:, 0])
