@@ -73,6 +73,7 @@ def main(env_id, seed):
                     env_num=max(collector_env_num, evaluator_env_num),
                     num_simulations=num_simulations,
                     rotary_emb=False,
+                    final_norm_option_in_encoder='LayerNorm',
                 ),
             ),
             # (str) The path of the pretrained model. If None, the model will be initialized by the default model.

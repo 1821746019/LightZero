@@ -25,7 +25,7 @@ classifiers = [
 ]
 dependencies = [
     "DI-engine>=0.5.3",
-    "gymnasium[atari]==0.28.0",
+    "gymnasium[atari,accept-rom-license]==0.28.0",
     "numpy>=1.24.1,<2",
     "pympler",
     "minigrid",
@@ -42,6 +42,7 @@ dependencies = [
     "cython>=0.29",
     "build>=0.7.0",
     "auditwheel>=4",
+    "opencv-python<=4.11",
     
 ]
 
@@ -92,7 +93,6 @@ test = [
     "numpy>=1.21.6",
     "easydict>=1.7,<2",
     "swig >= 4.1.1",
-    "opencv-python<=4.11",
 ]
 cpu = ["torch>=2.6.0"]
 gpu = ["torch>=2.6.0"]
