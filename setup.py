@@ -10,7 +10,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
-import re
 import sys
 from distutils.core import setup
 
@@ -31,19 +30,6 @@ if sys.platform == 'darwin':
         include_dirs.append(homebrew_python_path)
 print(f"Python version: {python_version}")
 print(f"Include directories: {include_dirs}")
-
-
-def _load_req(file: str):
-    with open(file, 'r', encoding='utf-8') as f:
-        return [line.strip() for line in f.readlines() if line.strip()]
-
-requirements = _load_req('requirements.txt')
-
-_REQ_PATTERN = re.compile('^requirements-([a-zA-Z0-9_]+)\\.txt$')
-group_requirements = {
-    item.group(1): _load_req(item.group(0))
-    for item in [_REQ_PATTERN.fullmatch(reqpath) for reqpath in os.listdir()] if item
-}
 
 # Set C++11 compile parameters according to the operating system
 extra_compile_args = []
@@ -97,15 +83,6 @@ def find_cython_extensions(path=None):
 _LINETRACE = not not os.environ.get('LINETRACE', None)
 
 setup(
-    name='LightZero',
-    version='0.2.0',
-    description='A lightweight and efficient MCTS/AlphaZero/MuZero algorithm toolkits.',
-    long_description_content_type='text/markdown',
-    author='opendilab',
-    author_email='opendilab@pjlab.org.cn',
-    url='https://github.com/opendilab/LightZero',
-    license='Apache License, Version 2.0',
-    keywords='Reinforcement Learning, MCTS, MuZero',
     packages=[
         # framework
         *find_packages(include=('lzero', "lzero.*")),
@@ -116,10 +93,6 @@ setup(
         package_name: ['*.yaml']
         for package_name in find_packages(include=('lzero.*',))
     },
-    python_requires=">=3.7",
-    install_requires=requirements,
-    tests_require=group_requirements['test'],
-    extras_require=group_requirements,
     ext_modules=cythonize(
         find_cython_extensions(),
         language_level=3,
@@ -127,18 +100,4 @@ setup(
             linetrace=_LINETRACE,
         ),
     ),
-    classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        "Intended Audience :: Science/Research",
-        'License :: OSI Approved :: Apache Software License',
-        'Operating System :: POSIX :: Linux',
-        # 'Operating System :: Microsoft :: Windows',
-        'Operating System :: MacOS :: MacOS X',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
-        'Programming Language :: Python :: 3.10',
-        'Programming Language :: Python :: 3.11',
-        'Topic :: Scientific/Engineering :: Artificial Intelligence',
-    ],
 )
