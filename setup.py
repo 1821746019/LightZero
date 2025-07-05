@@ -83,7 +83,7 @@ def find_cython_extensions(path=None):
         rpath, _ = os.path.splitext(relpath)
         extname = '.'.join(rpath.split(os.path.sep))
         extensions.append(Extension(
-            extname, [item],
+            extname, [relpath],
             # include_dirs=[np.get_include()],
             include_dirs=include_dirs,
             language="c++",

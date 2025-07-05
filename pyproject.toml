@@ -1,3 +1,8 @@
+[project]
+name = "LightZero"
+version = "0.2.0"
+requires-python = "==3.11.*"
+
 [build-system]
 requires = [
     "setuptools>=42",
