@@ -52,6 +52,7 @@ def main(env_id, seed):
             # eval_max_episode_steps=int(50),
         ),
         policy=dict(
+            use_wandb=True,
             learn=dict(learner=dict(hook=dict(save_ckpt_after_iter=1000000, ), ), ),  # default is 10000
             model=dict(
                 observation_shape=(3, 64, 64),

@@ -80,6 +80,9 @@ def train_unizero_segment(
     evaluator_env.seed(cfg.seed, dynamic_seed=False)
     set_pkg_seed(cfg.seed, use_cuda=torch.cuda.is_available())
 
+    if cfg.policy.use_wandb and get_rank() == 0:
+        wandb.init(config=cfg, project='LightZero', name=cfg.exp_name)
+
     policy = create_policy(cfg.policy, model=model, enable_field=['learn', 'collect', 'eval'])
 
     # Load pretrained model if specified

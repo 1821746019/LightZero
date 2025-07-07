@@ -48,6 +48,7 @@ lunarlander_cont_sampled_efficientzero_config = dict(
         # (str) The path of the pretrained model. If None, the model will be initialized by the default model.
         model_path=None,
         cuda=True,
+        use_wandb=True,
         env_type='not_board_games',
         game_segment_length=200,
         update_per_collect=update_per_collect,
