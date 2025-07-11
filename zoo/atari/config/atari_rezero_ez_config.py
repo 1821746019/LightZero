@@ -32,6 +32,7 @@ atari_efficientzero_config = dict(
         manager=dict(shared_memory=False, ),
     ),
     policy=dict(
+        use_wandb=True,
         model=dict(
             observation_shape=(4, 96, 96),
             frame_stack_num=4,

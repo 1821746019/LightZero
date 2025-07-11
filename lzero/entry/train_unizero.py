@@ -82,17 +82,6 @@ def train_unizero(
     evaluator_env.seed(cfg.seed, dynamic_seed=False)
     set_pkg_seed(cfg.seed, use_cuda=torch.cuda.is_available())
 
-    # Initialize wandb if specified
-    if cfg.policy.use_wandb:
-        logging.info("Initializing wandb...")
-        wandb.init(
-            project="LightZero",
-            config=cfg,
-            sync_tensorboard=False,
-            monitor_gym=False,
-            save_code=True,
-        )
-        logging.info("wandb initialization completed!")
 
     # Create policy
     logging.info("Creating policy...")
@@ -106,6 +95,9 @@ def train_unizero(
         logging.info("Pretrained model loaded successfully!")
 
     # Create core components for training
+    # Initialize wandb if specified
+    if cfg.policy.use_wandb and get_rank() == 0:
+        wandb.init(config=cfg,project="LightZero",name=cfg.exp_name,monitor_gym=True)
     tb_logger = SummaryWriter(os.path.join('./{}/log/'.format(cfg.exp_name), 'serial')) if get_rank() == 0 else None
     learner = BaseLearner(cfg.policy.learn.learner, policy.learn_mode, tb_logger, exp_name=cfg.exp_name)
     replay_buffer = GameBuffer(cfg.policy)

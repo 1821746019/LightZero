@@ -80,8 +80,6 @@ def train_unizero_segment(
     evaluator_env.seed(cfg.seed, dynamic_seed=False)
     set_pkg_seed(cfg.seed, use_cuda=torch.cuda.is_available())
 
-    if cfg.policy.use_wandb and get_rank() == 0:
-        wandb.init(config=cfg, project='LightZero', name=cfg.exp_name)
 
     policy = create_policy(cfg.policy, model=model, enable_field=['learn', 'collect', 'eval'])
 
@@ -91,6 +89,8 @@ def train_unizero_segment(
         policy.learn_mode.load_state_dict(torch.load(model_path, map_location=cfg.policy.device))
         logging.info(f'Loading model from {model_path} end!')
 
+    if cfg.policy.use_wandb and get_rank() == 0:
+        wandb.init(config=cfg, project='LightZero', name=cfg.exp_name, monitor_gym=True)
     # Create worker components: learner, collector, evaluator, replay buffer, commander
     tb_logger = SummaryWriter(os.path.join('./{}/log/'.format(cfg.exp_name), 'serial')) if get_rank() == 0 else None
     learner = BaseLearner(cfg.policy.learn.learner, policy.learn_mode, tb_logger, exp_name=cfg.exp_name)

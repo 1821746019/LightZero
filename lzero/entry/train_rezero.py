@@ -11,6 +11,7 @@ from ding.rl_utils import get_epsilon_greedy_fn
 from ding.utils import set_pkg_seed, get_rank
 from ding.worker import BaseLearner
 from tensorboardX import SummaryWriter
+import wandb
 
 from lzero.entry.utils import log_buffer_memory_usage, log_buffer_run_time
 from lzero.policy import visit_count_temperature
@@ -77,6 +78,9 @@ def train_rezero(
     if model_path:
         policy.learn_mode.load_state_dict(torch.load(model_path, map_location=cfg.policy.device))
 
+    # Initialize wandb if specified
+    if cfg.policy.use_wandb and get_rank() == 0:
+        wandb.init(config=cfg,project="LightZero",name=cfg.exp_name,monitor_gym=True)
     # Initialize worker components
     tb_logger = SummaryWriter(os.path.join(f'./{cfg.exp_name}/log/', 'serial')) if get_rank() == 0 else None
     learner = BaseLearner(cfg.policy.learn.learner, policy.learn_mode, tb_logger, exp_name=cfg.exp_name)
