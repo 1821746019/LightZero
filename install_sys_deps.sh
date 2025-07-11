@@ -1,0 +1,1 @@
+apt install -y swig libgl1-mesa-glx
