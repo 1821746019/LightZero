@@ -27,4 +27,5 @@ atari_env_action_space_map = EasyDict({
     'SeaquestNoFrameskip-v4': 18,
     'BoxingNoFrameskip-v4': 18,
     'BreakoutNoFrameskip-v4': 4,
+    'BeamRiderNoFrameskip-v4': 9,
 })
